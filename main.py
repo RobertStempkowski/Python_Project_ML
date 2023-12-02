@@ -1,3 +1,4 @@
+from pathlib import Path
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
@@ -5,12 +6,16 @@ from sklearn.decomposition import PCA
 import matplotlib.pyplot as plt
 import seaborn as sns
 from ydata_profiling import ProfileReport
-
+from config import vars
 # https://github.com/Mati0106/ML_python/tree/main/lecture_one
 # https://www.kaggle.com/datasets/volodymyrgavrysh/fraud-detection-bank-dataset-20k-records-binary/code
+
+p = Path('.')
+[x for x in p.iterdir() if x.is_dir()]
 df = pd.read_csv(
     "C:/Users/rober/Desktop/Studia PG/2 semestr/Uczenie maszynowe w pythonie Serocki/Projekt/fraud_detection_bank_dataset.csv",
     index_col=0)  # Column 0 has only indexes
+#inaczej zrobić te odniesienie do danych
 
 # check basic parameters for dataset
 print(df.shape)
@@ -73,7 +78,7 @@ def remove_collinear_features(x, threshold):
     return x
 
 
-df = remove_collinear_features(df, 0.8)
+df = remove_collinear_features(df, vars['threshold_corr'])
 
 """
 report = ProfileReport(df, title='My Data',correlations = {
@@ -87,6 +92,7 @@ report.to_file("my_report.html")
 # co z innymi niezbalansowanymi i o wysokiej korelacji?
 df = df.drop(columns=['col_28', 'col_58', 'col_108'])
 
+# standardscaler, a nie minmax
 # Standardization. Using MaxMinScaler as the data is skewed # https://www.askpython.com/python/examples/normalize-data-in-python
 scaler = MinMaxScaler()
 df_std = pd.DataFrame(scaler.fit_transform(df),
