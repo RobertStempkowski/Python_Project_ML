@@ -1,4 +1,3 @@
-from pathlib import Path
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
@@ -9,13 +8,10 @@ from ydata_profiling import ProfileReport
 from config import vars
 # https://github.com/Mati0106/ML_python/tree/main/lecture_one
 # https://www.kaggle.com/datasets/volodymyrgavrysh/fraud-detection-bank-dataset-20k-records-binary/code
-#zmiana
-p = Path('.')
-[x for x in p.iterdir() if x.is_dir()]
+
 df = pd.read_csv(
-    "C:/Users/rober/Desktop/Studia PG/2 semestr/Uczenie maszynowe w pythonie Serocki/Projekt/fraud_detection_bank_dataset.csv",
+    "fraud_detection_bank_dataset.csv",
     index_col=0)  # Column 0 has only indexes
-#inaczej zrobić te odniesienie do danych
 
 # check basic parameters for dataset
 print(df.shape)
