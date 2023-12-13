@@ -9,7 +9,7 @@ from ydata_profiling import ProfileReport
 from config import vars
 # https://github.com/Mati0106/ML_python/tree/main/lecture_one
 # https://www.kaggle.com/datasets/volodymyrgavrysh/fraud-detection-bank-dataset-20k-records-binary/code
-
+#zmiana
 p = Path('.')
 [x for x in p.iterdir() if x.is_dir()]
 df = pd.read_csv(
