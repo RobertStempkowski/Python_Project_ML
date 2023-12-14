@@ -8,9 +8,7 @@ from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import precision_score
 from config import vars
-
-# https://github.com/Mati0106/ML_python/tree/main/lecture_one
-# https://www.kaggle.com/datasets/volodymyrgavrysh/fraud-detection-bank-dataset-20k-records-binary/code
+# dataset: https://www.kaggle.com/datasets/volodymyrgavrysh/fraud-detection-bank-dataset-20k-records-binary/code
 
 df = pd.read_csv(
     vars['file_name'],
@@ -33,7 +31,6 @@ print(f'Count of features with missing values: {missing_count}')
 # delete columns with variance == 0 (keeping columns with variance>0)
 df = df.loc[:, (df.var() > 0)]
 print(df.shape)
-
 
 # https://www.kaggle.com/code/oldwine357/removing-highly-correlated-features
 def remove_collinear_features(x, threshold):
@@ -79,14 +76,12 @@ def remove_collinear_features(x, threshold):
 
 df = remove_collinear_features(df, vars['threshold_corr'])
 
-
 report = ProfileReport(df, title='My Data', correlations={
     "pearson": {"calculate": True},
     "spearman": {"calculate": True},
     "kendall": {"calculate": True}
   })
 report.to_file("ProfileReport.html")
-
 
 # drop very imbalanced columns based on ProfileReport: col_28 col_58 col_108
 df = df.drop(columns=['col_28', 'col_58', 'col_108'])
@@ -124,7 +119,6 @@ fig.update_traces(diagonal_visible=False)
 fig.show()
 
 # modeling
-
 X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.3, random_state=12)
 
 n_estimators = 10
