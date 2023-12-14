@@ -1,16 +1,19 @@
 import pandas as pd
-import numpy as np
-from sklearn.preprocessing import MinMaxScaler
-from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt
-import seaborn as sns
 from ydata_profiling import ProfileReport
+import plotly.express as px
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.model_selection._split import train_test_split
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import precision_score
 from config import vars
+
 # https://github.com/Mati0106/ML_python/tree/main/lecture_one
 # https://www.kaggle.com/datasets/volodymyrgavrysh/fraud-detection-bank-dataset-20k-records-binary/code
 
 df = pd.read_csv(
-    "fraud_detection_bank_dataset.csv",
+    vars['file_name'],
     index_col=0)  # Column 0 has only indexes
 
 # check basic parameters for dataset
@@ -76,47 +79,74 @@ def remove_collinear_features(x, threshold):
 
 df = remove_collinear_features(df, vars['threshold_corr'])
 
-"""
-report = ProfileReport(df, title='My Data',correlations = {
+
+report = ProfileReport(df, title='My Data', correlations={
     "pearson": {"calculate": True},
     "spearman": {"calculate": True},
     "kendall": {"calculate": True}
   })
-report.to_file("my_report.html")
-"""
+report.to_file("ProfileReport.html")
+
+
 # drop very imbalanced columns based on ProfileReport: col_28 col_58 col_108
-# co z innymi niezbalansowanymi i o wysokiej korelacji?
 df = df.drop(columns=['col_28', 'col_58', 'col_108'])
 
-# standardscaler, a nie minmax
-# Standardization. Using MaxMinScaler as the data is skewed # https://www.askpython.com/python/examples/normalize-data-in-python
-scaler = MinMaxScaler()
-df_std = pd.DataFrame(scaler.fit_transform(df),
-                      columns=df.columns, index=df.index)
-"""
-# show plots for columns in df_std
-fig, axes = plt.subplots(37, 2, figsize=(30, 15))
-# Flatten the axes array to easily iterate over the subplots
-axes = axes.flatten()
+# Standardization
+# separate the independent and dependent variables
+scale = StandardScaler()
+Y = df["targets"]
+X = df.drop("targets", axis=1)
 
-for col, ax in enumerate(axes):
-    sns.kdeplot(data=df_std, x=df.columns[col], fill=True, ax=ax, warn_singular=False)
+# standardization of dependent variables
+df = scale.fit_transform(X)
+print(df)
 
-    ax.set_xticks([])
-    ax.set_yticks([])
-    ax.set_xlabel('')
-    ax.set_ylabel('')
-    ax.set_title(df.columns[col], loc='left', weight='bold', fontsize=10, pad=-10)
-plt.show()
-"""
+# PCA
+pca = PCA(n_components=2)
+pca.fit(X)
 
+pca.transform(X)
 
-# definiujemy ile komponentow chcemy otrzymac z PCA (ile wyznaczyc wektorow wlasnych, patrz liczenie PCA z zajec nr1, link na wykladzie)
-pca = PCA(n_components=1)
+pca = PCA()
+components = pca.fit_transform(X)
+labels = {
+    str(i): f"PC {i+1} ({var:.1f}%)"
+    for i, var in enumerate(pca.explained_variance_ratio_ * 100)
+}
 
-X_train = pca.fit_transform(df)
+fig = px.scatter_matrix(
+    components,
+    labels=labels,
+    dimensions=range(4),
+    color=Y
+)
+fig.update_traces(diagonal_visible=False)
+fig.show()
 
-explained_variance = pca.explained_variance_ratio_
-print(pca)
-print(X_train)
-print(explained_variance)
+# modeling
+
+X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.3, random_state=12)
+
+n_estimators = 10
+max_depth = 3
+
+Logistic_Regression = LogisticRegression(solver="liblinear", class_weight={1: 2}, random_state=10)
+Logistic_Regression.fit(X_train, y_train)
+
+random_forest = RandomForestClassifier(
+    n_estimators=n_estimators, max_depth=max_depth, random_state=10)
+random_forest.fit(X_train, y_train)
+
+gradient_boosting = GradientBoostingClassifier(
+    n_estimators=n_estimators, max_depth=max_depth, random_state=10)
+_ = gradient_boosting.fit(X_train, y_train)
+
+models = [
+    ("RF", random_forest),
+    ("LR", Logistic_Regression),
+    ("GBDT", gradient_boosting),
+]
+
+for name, model in models:
+    precision = precision_score(y_test, model.predict(X_test))
+    print("precision of {}:{}".format(name, precision))
